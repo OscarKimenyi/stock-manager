@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock In - Stock Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <script>
+        function resetStockInForm() {
+            document.getElementById('stockInForm').reset();
+            document.getElementById('purchase_date').valueAsDate = new Date();
+            // Remove any aria-hidden issues
+            const modal = document.getElementById('stockInModal');
+            if (modal) {
+                modal.removeAttribute('aria-hidden');
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Stock Manager</h3>
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+            <li><a href="products.html"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="suppliers.html"><i class="fas fa-truck"></i><span>Suppliers</span></a></li>
+            <li><a href="stock-in.html" class="active"><i class="fas fa-arrow-down"></i><span>Stock In</span></a></li>
+            <li><a href="stock-out.html"><i class="fas fa-arrow-up"></i><span>Stock Out</span></a></li>
+            <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reports</span></a></li>
+            <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Navbar -->
+        <div class="top-navbar">
+            <h1 class="page-title">Stock In</h1>
+            <div class="user-dropdown">
+                <div class="user-info">
+                    <span id="usernameDisplay">Loading...</span>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stockInModal" onclick="resetStockInForm()">
+                    <i class="fas fa-plus me-2"></i>New Stock In
+                </button>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-outline-info" onclick="showUnpaidBalances()">
+                        <i class="fas fa-credit-card me-2"></i>View Unpaid
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock In Table -->
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Supplier</th>
+                            <th>Quantity</th>
+                            <th>Buying Price</th>
+                            <th>Total Amount</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockInTableBody">
+                        <tr>
+                            <td colspan="11" class="text-center">
+                                <div class="spinner-container">
+                                    <div class="spinner"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Stock In Modal -->
+    <div class="modal fade" id="stockInModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Stock In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- stock-in.html - The form section -->
+                    <form id="stockInForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="product_id" class="form-label">Product <span class="text-danger">*</span></label>
+                                <select class="form-select" id="product_id" name="product_id" required>
+                                    <option value="">Select Product</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="supplier_id" class="form-label">Supplier <span class="text-danger">*</span></label>
+                                <select class="form-select" id="supplier_id" name="supplier_id" required>
+                                    <option value="">Select Supplier</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" step="1" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="buying_price" class="form-label">Buying Price Per Unit <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="buying_price" name="buying_price" min="0.01" step="0.01" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="amount_paid" class="form-label">Amount Paid <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="amount_paid" name="amount_paid" min="0" step="0.01" value="0" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="">Select Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Bank">Bank Transfer</option>
+                                    <option value="Mobile Money">Mobile Money</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="purchase_date" class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="receipt" class="form-label">Receipt (Image/PDF)</label>
+                                <input type="file" class="form-control" id="receipt" name="receipt" accept=".jpg,.jpeg,.png,.gif,.pdf">
+                                <small class="text-muted">Optional: Upload receipt file</small>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveStockIn()">Save Transaction</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unpaid Balances Modal -->
+    <div class="modal fade" id="unpaidModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Unpaid Balances</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Supplier</th>
+                                    <th>Product</th>
+                                    <th>Total Amount</th>
+                                    <th>Paid</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unpaidTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="5" class="text-end">Total Unpaid:</th>
+                                    <th id="totalUnpaid">0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/stock-in.js"></script>
+</body>
+</html>
