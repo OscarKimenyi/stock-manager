@@ -74,6 +74,6 @@ CREATE TABLE stock_out (
     INDEX idx_stock_out_date (date)
 );
 
--- Insert default admin user (password: admin123)
+-- Insert default admin user (password: )
 INSERT INTO users (username, password) 
 VALUES ('admin', '$2b$10$YourHashedPasswordHere');
