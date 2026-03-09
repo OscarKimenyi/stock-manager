@@ -159,8 +159,6 @@ function calculateTotals() {
 }
 
 async function saveStockIn() {
-    console.log('Saving stock in transaction...');
-    
     const form = document.getElementById('stockInForm');
     const formData = new FormData(form);
     
@@ -172,10 +170,33 @@ async function saveStockIn() {
     const payment_method = document.getElementById('payment_method')?.value;
     const purchase_date = document.getElementById('purchase_date')?.value;
     
-    if (!product_id || !supplier_id || !quantity || !buying_price || !payment_method || !purchase_date) {
-        showToast('Please fill all required fields', 'warning');
+    if (!product_id) {
+        Toast.warning('Please select a product', 'Missing Information');
         return;
     }
+    if (!supplier_id) {
+        Toast.warning('Please select a supplier', 'Missing Information');
+        return;
+    }
+    if (!quantity || quantity <= 0) {
+        Toast.warning('Please enter a valid quantity', 'Invalid Input');
+        return;
+    }
+    if (!buying_price || buying_price <= 0) {
+        Toast.warning('Please enter a valid buying price', 'Invalid Input');
+        return;
+    }
+    if (!payment_method) {
+        Toast.warning('Please select a payment method', 'Missing Information');
+        return;
+    }
+    if (!purchase_date) {
+        Toast.warning('Please select a purchase date', 'Missing Information');
+        return;
+    }
+    
+    // Show loading toast
+    const loader = Toast.loading('Processing stock in transaction...');
     
     try {
         const response = await fetch('/api/stock-in', {
@@ -184,13 +205,12 @@ async function saveStockIn() {
         });
         
         const data = await response.json();
-        console.log('Save response:', data);
         
         if (!response.ok) {
             throw new Error(data.error || data.errors?.[0]?.msg || 'Failed to save');
         }
         
-        showToast('Stock in transaction saved successfully', 'success');
+        loader.success('Stock in transaction saved successfully!');
         
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('stockInModal'));
@@ -204,9 +224,14 @@ async function saveStockIn() {
         currentPage = 1;
         await loadStockIn();
         
+        // Also refresh dashboard if needed
+        if (typeof loadDashboardData === 'function') {
+            loadDashboardData();
+        }
+        
     } catch (error) {
         console.error('Save error:', error);
-        showToast(error.message, 'error');
+        loader.error(error.message);
     }
 }
 

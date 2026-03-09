@@ -107,28 +107,38 @@ function showDeleteModal(id) {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
+// Delete supplier function
 async function confirmDelete() {
     if (!deleteId) {
-        showToast('No supplier selected', 'warning');
+        Toast.warning('No supplier selected', 'Warning');
         return;
     }
     
-    try {
-        console.log('Deleting supplier:', deleteId);
-        await API.suppliers.delete(deleteId);
-        
-        showToast('Supplier deleted successfully', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-        
-        // Refresh the list
-        await loadSuppliers();
-        
-    } catch (error) {
-        console.error('Delete error:', error);
-        showToast(error.message || 'Failed to delete supplier', 'error');
-    } finally {
-        deleteId = null;
-    }
+    Toast.confirm({
+        title: 'Delete Supplier',
+        message: 'Are you sure you want to delete this supplier? This action cannot be undone.',
+        type: 'warning',
+        confirmText: 'Yes, delete it',
+        onConfirm: async () => {
+            const loader = Toast.loading('Deleting supplier...');
+            try {
+                await API.suppliers.delete(deleteId);
+                loader.success('Supplier deleted successfully!');
+                
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                await loadSuppliers();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                loader.error(error.message || 'Failed to delete supplier');
+            } finally {
+                deleteId = null;
+            }
+        },
+        onCancel: () => {
+            Toast.info('Delete cancelled', 'Supplier not deleted');
+        }
+    });
 }
 
 async function viewHistory(id) {
@@ -172,7 +182,8 @@ function displayPurchaseHistory(history) {
     `).join('');
 }
 
-function saveSupplier() {
+// Save supplier function
+async function saveSupplier() {
     const supplierId = document.getElementById('supplierId').value;
     const supplierData = {
         supplier_name: document.getElementById('supplierName').value,
@@ -181,27 +192,30 @@ function saveSupplier() {
         address: document.getElementById('address').value
     };
     
-    console.log('Saving supplier:', supplierData);
-    
     // Validate
     if (!supplierData.supplier_name) {
-        showToast('Supplier name is required', 'warning');
+        Toast.warning('Supplier name is required', 'Missing Information');
         return;
     }
     
     // Validate email if provided
     if (supplierData.email && !isValidEmail(supplierData.email)) {
-        showToast('Please enter a valid email address', 'warning');
+        Toast.warning('Please enter a valid email address', 'Invalid Email');
         return;
     }
     
-    const promise = supplierId 
-        ? API.suppliers.update(supplierId, supplierData)
-        : API.suppliers.create(supplierData);
+    // Show loading toast
+    const loader = Toast.loading(supplierId ? 'Updating supplier...' : 'Creating supplier...');
     
-    promise.then(response => {
-        console.log('Supplier saved:', response);
-        showToast(`Supplier ${supplierId ? 'updated' : 'created'} successfully`, 'success');
+    try {
+        let response;
+        if (supplierId) {
+            response = await API.suppliers.update(supplierId, supplierData);
+            loader.success('Supplier updated successfully!');
+        } else {
+            response = await API.suppliers.create(supplierData);
+            loader.success('Supplier created successfully!');
+        }
         
         // Close modal
         bootstrap.Modal.getInstance(document.getElementById('supplierModal')).hide();
@@ -210,11 +224,12 @@ function saveSupplier() {
         resetSupplierForm();
         
         // Refresh the list
-        loadSuppliers();
-    }).catch(error => {
+        await loadSuppliers();
+        
+    } catch (error) {
         console.error('Save error:', error);
-        showToast(error.message || `Failed to ${supplierId ? 'update' : 'create'} supplier`, 'error');
-    });
+        loader.error(error.message || `Failed to ${supplierId ? 'update' : 'create'} supplier`);
+    }
 }
 
 function resetSupplierForm() {

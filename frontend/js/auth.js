@@ -32,50 +32,82 @@ if (loginForm) {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
+        // Simple validation
+        if (!username || !password) {
+            Toast.warning('Please enter both username and password', 'Missing Information');
+            return;
+        }
+        
+        // Show loading toast
+        const loader = Toast.loading('Logging in...', 'Please wait');
+        
         try {
             const data = await API.auth.login({ username, password });
-            showToast('Login successful! Redirecting...', 'success');
+            
+            // Success - update loading toast to success
+            loader.success('Login successful! Redirecting...');
+            
+            // Redirect to dashboard
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 1500);
+            
         } catch (error) {
-            showToast(error.message || 'Login failed', 'error');
+            console.error('Login error:', error);
+            // Show error toast
+            loader.error(error.message || 'Login failed. Please check your credentials.');
         }
     });
 }
 
 // Logout function
 async function logout() {
-    try {
-        await API.auth.logout();
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1500);
-    } catch (error) {
-        showToast('Logout failed', 'error');
-    }
+    Toast.confirm({
+        title: 'Logout',
+        message: 'Are you sure you want to logout?',
+        type: 'info',
+        confirmText: 'Yes, logout',
+        onConfirm: async () => {
+            const loader = Toast.loading('Logging out...');
+            try {
+                await API.auth.logout();
+                loader.success('Logged out successfully');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                loader.error('Logout failed');
+            }
+        },
+        onCancel: () => {
+            Toast.info('Logout cancelled', 'Stay logged in');
+        }
+    });
 }
 
 // Toast notification function
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                          type === 'error' ? 'exclamation-circle' : 
-                          type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+function showToast(message, type = 'info', title = '') {
+    Toast.show(message, type, title);
+}
+
+function showSuccess(message, title = 'Success') {
+    Toast.success(message, title);
+}
+
+function showError(message, title = 'Error') {
+    Toast.error(message, title);
+}
+
+function showWarning(message, title = 'Warning') {
+    Toast.warning(message, title);
+}
+
+function showInfo(message, title = 'Information') {
+    Toast.info(message, title);
+}
+
+function showConfirmation(options) {
+    Toast.confirm(options);
 }
 
 // Sidebar toggle function

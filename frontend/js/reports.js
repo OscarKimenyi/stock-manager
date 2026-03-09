@@ -516,7 +516,7 @@ function exportToExcel() {
     a.click();
     window.URL.revokeObjectURL(url);
     
-    showToast('Report exported successfully', 'success');
+    Toast.success('Report exported successfully', 'Export Complete');
 }
 
 function getPaymentStatusColor(status) {

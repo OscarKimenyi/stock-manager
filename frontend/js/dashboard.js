@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDashboardData();
+
+    // Show welcome toast
+    setTimeout(() => {
+        Toast.success('Welcome back! Dashboard loaded successfully', 'Hello ' + username);
+    }, 500);
 });
 
 async function loadDashboardData() {
@@ -70,3 +75,5 @@ function formatCurrency(amount) {
         currencyDisplay: 'code'
     }).format(amount).replace('TZS', 'Tsh').trim();
 }
+
+window.loadDashboardData = loadDashboardData;

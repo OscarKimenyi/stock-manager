@@ -76,36 +76,64 @@ function checkStock() {
 
 async function saveStockOut() {
     if (!checkStock()) {
-        showToast('Please check stock availability', 'warning');
+        Toast.warning('Insufficient stock available', 'Stock Error');
         return;
     }
     
-    const form = document.getElementById('stockOutForm');
-    const formData = {
-        product_id: parseInt(document.getElementById('product_id').value),
-        quantity: parseInt(document.getElementById('quantity').value),
-        date: document.getElementById('date').value,
-        notes: document.getElementById('notes').value
-    };
+    const product_id = document.getElementById('product_id').value;
+    const quantity = document.getElementById('quantity').value;
+    const date = document.getElementById('date').value;
+    const notes = document.getElementById('notes').value;
     
     // Validate
-    if (!formData.product_id || !formData.quantity || !formData.date) {
-        showToast('Please fill all required fields', 'warning');
+    if (!product_id) {
+        Toast.warning('Please select a product', 'Missing Information');
         return;
     }
+    if (!quantity || quantity <= 0) {
+        Toast.warning('Please enter a valid quantity', 'Invalid Input');
+        return;
+    }
+    if (!date) {
+        Toast.warning('Please select a date', 'Missing Information');
+        return;
+    }
+    
+    const formData = {
+        product_id: parseInt(product_id),
+        quantity: parseInt(quantity),
+        date: date,
+        notes: notes
+    };
+    
+    // Show loading toast
+    const loader = Toast.loading('Processing stock out transaction...');
     
     try {
         const response = await API.stockOut.create(formData);
         
-        showToast('Stock out transaction saved successfully', 'success');
+        loader.success('Stock out transaction saved successfully!');
+        
+        // Close modal
         bootstrap.Modal.getInstance(document.getElementById('stockOutModal')).hide();
-        form.reset();
+        
+        // Reset form
+        document.getElementById('stockOutForm').reset();
         document.getElementById('date').valueAsDate = new Date();
+        
+        // Refresh the list
         currentPage = 1;
-        loadStockOut();
-        loadProducts(); // Refresh product list with updated stock
+        await loadStockOut();
+        await loadProducts(); // Refresh product list with updated stock
+        
+        // Also refresh dashboard if needed
+        if (typeof loadDashboardData === 'function') {
+            loadDashboardData();
+        }
+        
     } catch (error) {
-        showToast(error.message || 'Failed to save transaction', 'error');
+        console.error('Save error:', error);
+        loader.error(error.message || 'Failed to save transaction');
     }
 }
 

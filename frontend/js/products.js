@@ -134,22 +134,50 @@ function showDeleteModal(id) {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
+// Delete product function
 async function confirmDelete() {
-    if (!deleteId) return;
-    
-    try {
-        await API.products.delete(deleteId);
-        showToast('Product deleted successfully', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-        loadProducts();
-    } catch (error) {
-        showToast(error.message || 'Failed to delete product', 'error');
-    } finally {
-        deleteId = null;
+    if (!deleteId) {
+        Toast.warning('No product selected', 'Warning');
+        return;
     }
+    
+    // Show confirmation dialog
+    Toast.confirm({
+        title: 'Delete Product',
+        message: 'Are you sure you want to delete this product? This action cannot be undone.',
+        type: 'warning',
+        confirmText: 'Yes, delete it',
+        onConfirm: async () => {
+            const loader = Toast.loading('Deleting product...');
+            try {
+                await API.products.delete(deleteId);
+                loader.success('Product deleted successfully!');
+                
+                // Close delete modal
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                
+                // Refresh the list
+                await loadProducts();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                loader.error(error.message || 'Failed to delete product');
+            } finally {
+                deleteId = null;
+            }
+        },
+        onCancel: () => {
+            Toast.info('Delete cancelled', 'Product not deleted');
+        }
+    });
 }
 
-function saveProduct() {
+// Save product function
+// frontend/js/products.js - Add console logs to debug
+
+async function saveProduct() {
+    console.log('🔵 saveProduct function started');
+    
     const productId = document.getElementById('productId').value;
     const productData = {
         product_name: document.getElementById('productName').value,
@@ -159,24 +187,53 @@ function saveProduct() {
         minimum_stock_level: parseInt(document.getElementById('minStockLevel').value) || 5
     };
     
+    console.log('📦 Product data:', productData);
+    
     // Validate
     if (!productData.product_name || !productData.product_code || !productData.unit_type) {
-        showToast('Please fill all required fields', 'warning');
+        console.log('⚠️ Validation failed - showing warning toast');
+        Toast.warning('Please fill all required fields', 'Missing Information');
         return;
     }
     
-    const promise = productId 
-        ? API.products.update(productId, productData)
-        : API.products.create(productData);
+    console.log('✅ Validation passed, showing loading toast');
+    const loader = Toast.loading(productId ? 'Updating product...' : 'Creating product...');
+    console.log('🔄 Loader toast shown');
     
-    promise.then(() => {
-        showToast(`Product ${productId ? 'updated' : 'created'} successfully`, 'success');
-        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    try {
+        console.log('📡 Making API call...');
+        let response;
+        if (productId) {
+            response = await API.products.update(productId, productData);
+            console.log('✅ Product updated successfully:', response);
+            loader.success('Product updated successfully!');
+            console.log('🎉 Success toast shown');
+        } else {
+            response = await API.products.create(productData);
+            console.log('✅ Product created successfully:', response);
+            loader.success('Product created successfully!');
+
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+                if (modal) modal.hide();
+            }, 500);
+            console.log('🎉 Success toast shown');
+        }
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+        if (modal) modal.hide();
+        
+        // Reset form
         resetProductForm();
-        loadProducts();
-    }).catch(error => {
-        showToast(error.message || `Failed to ${productId ? 'update' : 'create'} product`, 'error');
-    });
+        
+        // Refresh the list
+        await loadProducts();
+        
+    } catch (error) {
+        console.log('❌ Error occurred:', error);
+        loader.error(error.message || `Failed to ${productId ? 'update' : 'create'} product`);
+    }
 }
 
 function resetProductForm() {
