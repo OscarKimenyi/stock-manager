@@ -64,7 +64,9 @@ function updateLowStockAlerts(products) {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(amount);
+        currency: 'TZS',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        currencyDisplay: 'code'
+    }).format(amount).replace('TZS', 'Tsh').trim();
 }

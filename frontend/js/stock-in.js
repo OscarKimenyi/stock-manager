@@ -324,9 +324,11 @@ function getPaymentStatusColor(status) {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(amount || 0);
+        currency: 'TZS',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        currencyDisplay: 'code'
+    }).format(amount || 0).replace('TZS', 'Tsh').trim();
 }
 
 function escapeHtml(unsafe) {
