@@ -92,6 +92,7 @@ const API = {
     // Stock In APIs
     stockIn: {
         getAll: (page = 1) => API.request(`/stock-in?page=${page}`),
+        getOne: (id) => API.request(`/stock-in/${id}`),
         
         create: (formData) => {
             return fetch(API.baseURL + '/stock-in', {
@@ -145,5 +146,40 @@ const API = {
         },
         
         lowStock: () => API.request('/reports/low-stock')
+    },
+
+    // Payment APIs
+    payments: {
+        makePayment: (data) => {
+            return fetch(API.baseURL + '/payments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(res => res.json());
+        },
+
+        getHistory: async (stockInId) => {
+            try {
+                const response = await fetch(API.baseURL + `/payments/history/${stockInId}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    // If table doesn't exist, return empty array instead of error
+                    if (data.error && data.error.includes('doesn\'t exist')) {
+                        return [];
+                    }
+                    throw new Error(data.error || 'Failed to fetch payment history');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error in getHistory:', error);
+                return []; // Return empty array on error
+            }
+        },
+        
+        getSupplierPayments: (supplierId) => API.request(`/payments/supplier/${supplierId}`)
     }
 };
