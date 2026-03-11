@@ -1,5 +1,7 @@
 let currentPage = 1;
 let currentPaymentStockInId = null;
+let currentTotalAmount = 0;
+let currentBalance = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Stock-In page loaded');
@@ -215,11 +217,105 @@ function calculateTotals() {
     const price = parseFloat(document.getElementById('buying_price')?.value) || 0;
     const paid = parseFloat(document.getElementById('amount_paid')?.value) || 0;
     
-    const total = quantity * price;
-    const balance = total - paid;
+    currentTotalAmount = quantity * price;
+    currentBalance = currentTotalAmount - paid;
     
-    // You can display these values somewhere if you want
-    console.log('Calculated - Total:', total, 'Balance:', balance);
+    // Update summary display
+    updatePaymentSummary(currentTotalAmount, paid, currentBalance);
+    
+    // Validate amount paid
+    validateAmountPaid(paid, currentTotalAmount);
+    
+    console.log('Calculated - Total:', currentTotalAmount, 'Paid:', paid, 'Balance:', currentBalance);
+}
+
+// New function to validate amount paid
+function validateAmountPaid(paid, total) {
+    const warningDiv = document.getElementById('amountPaidWarning');
+    const warningMessage = document.getElementById('warningMessage');
+    const amountPaidInput = document.getElementById('amount_paid');
+    const hintEl = document.getElementById('amountPaidHint');
+    
+    if (!warningDiv || !warningMessage || !amountPaidInput) return true;
+    
+    if (paid > total) {
+        // Amount paid exceeds total - SHOW WARNING
+        warningDiv.style.display = 'block';
+        warningMessage.innerHTML = `Amount paid (${formatCurrency(paid)}) exceeds total amount (${formatCurrency(total)}). Please adjust the amount paid.`;
+        warningDiv.className = 'text-danger small mt-1';
+        
+        // Highlight the input
+        amountPaidInput.classList.add('amount-warning');
+        
+        if (hintEl) {
+            hintEl.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle"></i> Amount cannot exceed total!</span>';
+        }
+
+        // Show payment summary with warning colors
+        const summaryBalance = document.getElementById('summaryBalance');
+        if (summaryBalance) {
+            summaryBalance.className = 'text-danger fw-bold';
+        }
+        
+        return false;
+        } else {
+        // Amount paid is valid
+        warningDiv.style.display = 'none';
+        amountPaidInput.classList.remove('amount-warning');
+        
+        if (hintEl) {
+            if (paid === 0) {
+                hintEl.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-triangle"></i> No payment made - This will create a debt</span>';
+            } else if (paid < total) {
+                hintEl.innerHTML = `<span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Partial payment - Remaining balance: ${formatCurrency(total - paid)}</span>`;
+            } else {
+                hintEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Fully paid</span>';
+            }
+        }
+
+         // Update summary balance color based on payment status
+         const summaryBalance = document.getElementById('summaryBalance');
+         if (summaryBalance) {
+             if (paid === 0) {
+                 summaryBalance.className = 'text-danger fw-bold';
+             } else if (paid < total) {
+                 summaryBalance.className = 'text-warning fw-bold';
+             } else {
+                 summaryBalance.className = 'text-success fw-bold';
+             }
+         }
+         
+         return true;
+    }
+}
+
+// New function to update payment summary
+function updatePaymentSummary(total, paid, balance) {
+    const summaryDiv = document.getElementById('paymentSummary');
+    const summaryTotal = document.getElementById('summaryTotal');
+    const summaryPaid = document.getElementById('summaryPaid');
+    const summaryBalance = document.getElementById('summaryBalance');
+    
+    if (!summaryDiv || !summaryTotal || !summaryPaid || !summaryBalance) return;
+    
+    // Show summary if total > 0
+    if (total > 0) {
+        summaryDiv.style.display = 'block';
+        summaryTotal.textContent = formatCurrency(total);
+        summaryPaid.textContent = formatCurrency(paid);
+        summaryBalance.textContent = formatCurrency(balance);
+        
+        // Color code the balance
+        if (balance === 0) {
+            summaryBalance.className = 'text-success fw-bold';
+            } else if (paid === 0) {
+            summaryBalance.className = 'text-danger fw-bold';
+            } else {
+            summaryBalance.className = 'text-warning fw-bold';
+            }
+        } else {
+        summaryDiv.style.display = 'none';
+    }
 }
 
 async function saveStockIn() {
@@ -228,14 +324,19 @@ async function saveStockIn() {
     const form = document.getElementById('stockInForm');
     const formData = new FormData(form);
     
-    // Validate required fields
+    // Get values
     const product_id = document.getElementById('product_id')?.value;
     const supplier_id = document.getElementById('supplier_id')?.value;
-    const quantity = document.getElementById('quantity')?.value;
-    const buying_price = document.getElementById('buying_price')?.value;
+    const quantity = parseFloat(document.getElementById('quantity')?.value) || 0;
+    const buying_price = parseFloat(document.getElementById('buying_price')?.value) || 0;
+    const amount_paid = parseFloat(document.getElementById('amount_paid')?.value) || 0;
     const payment_method = document.getElementById('payment_method')?.value;
     const purchase_date = document.getElementById('purchase_date')?.value;
     
+    // Calculate total
+    const total_amount = quantity * buying_price;
+    
+    // Validate required fields
     if (!product_id) {
         Toast.warning('Please select a product', 'Missing Information');
         return;
@@ -261,7 +362,74 @@ async function saveStockIn() {
         return;
     }
     
-    // Show loading toast
+    // VALIDATE AMOUNT PAID DOES NOT EXCEED TOTAL
+    if (amount_paid > total_amount) {
+        Toast.error(
+            `Amount paid (${formatCurrency(amount_paid)}) cannot exceed total amount (${formatCurrency(total_amount)})!`,
+            'Payment Error'
+        );
+        
+        // Highlight the amount paid field
+        const amountPaidInput = document.getElementById('amount_paid');
+        amountPaidInput.classList.add('amount-warning');
+        amountPaidInput.focus();
+
+        // Show detailed warning
+        showPaymentExceedWarning(amount_paid, total_amount);
+        
+        return;
+    }
+    
+    // Show appropriate message based on payment status
+    if (amount_paid === 0) {
+        // Ask for confirmation for unpaid transaction
+        Toast.confirm({
+            title: 'Unpaid Transaction',
+            message: `You're creating an UNPAID transaction of ${formatCurrency(total_amount)}. This will be recorded as debt. Continue?`,
+            type: 'warning',
+            confirmText: 'Yes, create debt',
+            onConfirm: async () => {
+                await submitStockIn(formData);
+            }
+        });
+        return;
+    } else if (amount_paid < total_amount) {
+        // Ask for confirmation for partial payment
+        Toast.confirm({
+            title: 'Partial Payment',
+            message: `You're making a partial payment of ${formatCurrency(amount_paid)}. Remaining balance: ${formatCurrency(total_amount - amount_paid)}. Continue?`,
+            type: 'info',
+            confirmText: 'Yes, proceed',
+            onConfirm: async () => {
+                await submitStockIn(formData);
+            }
+        });
+        return;
+    }
+    
+    // Full payment - proceed directly
+    await submitStockIn(formData);
+}
+
+// New function to show payment exceed warning
+function showPaymentExceedWarning(paid, total) {
+    const warningDiv = document.getElementById('amountPaidWarning');
+    const warningMessage = document.getElementById('warningMessage');
+    
+    if (warningDiv && warningMessage) {
+        warningDiv.style.display = 'block';
+        warningMessage.innerHTML = `❌ AMOUNT EXCEEDS TOTAL! Paid: ${formatCurrency(paid)}, Total: ${formatCurrency(total)}. Please reduce the amount paid.`;
+        warningDiv.className = 'text-danger small mt-1 fw-bold';
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            warningDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+// New function to submit the form after validation
+async function submitStockIn(formData) {
     const loader = Toast.loading('Processing stock in transaction...');
     
     try {
@@ -276,21 +444,36 @@ async function saveStockIn() {
             throw new Error(data.error || data.errors?.[0]?.msg || 'Failed to save');
         }
         
-        loader.success('Stock in transaction saved successfully!');
+        // Show success message with payment status
+        const amount_paid = parseFloat(formData.get('amount_paid')) || 0;
+        const quantity = parseFloat(formData.get('quantity')) || 0;
+        const price = parseFloat(formData.get('buying_price')) || 0;
+        const total = quantity * price;
+
+        if (amount_paid === 0) {
+            loader.success('Unpaid transaction recorded successfully! Debt created.');
+        } else if (amount_paid < total) {
+            loader.success(`Partial payment recorded! Remaining balance: ${formatCurrency(total - amount_paid)}`);
+        } else {
+            loader.success('Fully paid transaction recorded successfully!');
+        }
         
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('stockInModal'));
         if (modal) modal.hide();
         
         // Reset form
-        form.reset();
+        document.getElementById('stockInForm').reset();
         document.getElementById('purchase_date').valueAsDate = new Date();
+        
+        // Hide payment summary
+        document.getElementById('paymentSummary').style.display = 'none';
         
         // Refresh the list
         currentPage = 1;
         await loadStockIn();
-        
-        // Also refresh dashboard if needed
+
+        // Refresh dashboard
         if (typeof window.loadDashboardData === 'function') {
             window.loadDashboardData();
         }
@@ -300,6 +483,55 @@ async function saveStockIn() {
         loader.error(error.message);
     }
 }
+
+// Add event listeners for real-time validation
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Stock-In page loaded');
+    loadProducts();
+    loadSuppliers();
+    loadStockIn();
+    
+    // Set today's date as default
+    const dateInput = document.getElementById('purchase_date');
+    if (dateInput) {
+        dateInput.valueAsDate = new Date();
+    }
+    
+    // Calculate totals on input change with real-time validation
+    const quantityInput = document.getElementById('quantity');
+    const priceInput = document.getElementById('buying_price');
+    const paidInput = document.getElementById('amount_paid');
+    
+    if (quantityInput) {
+        quantityInput.addEventListener('input', calculateTotals);
+        quantityInput.addEventListener('blur', calculateTotals);
+    }
+    if (priceInput) {
+        priceInput.addEventListener('input', calculateTotals);
+        priceInput.addEventListener('blur', calculateTotals);
+    }
+    if (paidInput) {
+        paidInput.addEventListener('input', calculateTotals);
+        paidInput.addEventListener('blur', calculateTotals);
+        paidInput.addEventListener('keyup', calculateTotals);
+    }
+    
+    // Reset validation when modal closes
+    const stockInModal = document.getElementById('stockInModal');
+    if (stockInModal) {
+        stockInModal.addEventListener('hidden.bs.modal', function() {
+            const warningDiv = document.getElementById('amountPaidWarning');
+            const amountPaidInput = document.getElementById('amount_paid');
+            const hintEl = document.getElementById('amountPaidHint');
+            const summaryDiv = document.getElementById('paymentSummary');
+            
+            if (warningDiv) warningDiv.style.display = 'none';
+            if (amountPaidInput) amountPaidInput.classList.remove('amount-warning');
+            if (hintEl) hintEl.innerHTML = 'Enter payment amount';
+            if (summaryDiv) summaryDiv.style.display = 'none';
+        });
+    }
+});
 
 async function showUnpaidBalances() {
     try {
