@@ -141,7 +141,30 @@ const stockInController = {
             console.error('Get total unpaid error:', error);
             res.status(500).json({ error: 'Server error' });
         }
-    }
+    },
+
+    // Get single stock in by ID
+    getStockInById: async (req, res) => {
+        try {
+            const [transactions] = await pool.query(
+                `SELECT si.*, p.product_name, p.product_code, s.supplier_name 
+                FROM stock_in si
+                JOIN products p ON si.product_id = p.id
+                JOIN suppliers s ON si.supplier_id = s.id
+                WHERE si.id = ?`,
+                [req.params.id]
+            );
+
+            if (transactions.length === 0) {
+                return res.status(404).json({ error: 'Transaction not found' });
+            }
+
+            res.json(transactions[0]);
+        } catch (error) {
+            console.error('Get stock in error:', error);
+            res.status(500).json({ error: 'Server error' });
+        }
+    },
 };
 
 module.exports = stockInController;
