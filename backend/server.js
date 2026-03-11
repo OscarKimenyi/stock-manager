@@ -31,6 +31,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/suppliers', require('./routes/supplierRoutes'));
 app.use('/api/stock-in', require('./routes/stockInRoutes'));
 app.use('/api/stock-out', require('./routes/stockOutRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 
 // Serve frontend pages
