@@ -89,6 +89,7 @@ stock-management-system/
 │   │   └── db.js                 # Database configuration
 │   ├── controllers/               # Business logic
 │   │   ├── authController.js
+│   │   ├── paymentController.js
 │   │   ├── productController.js
 │   │   ├── supplierController.js
 │   │   ├── stockInController.js
@@ -102,6 +103,7 @@ stock-management-system/
 │   │   └── StockOut.js
 │   ├── routes/                    # API routes
 │   │   ├── authRoutes.js
+│   │   ├── paymentRoutes.js
 │   │   ├── productRoutes.js
 │   │   ├── supplierRoutes.js
 │   │   ├── stockInRoutes.js
