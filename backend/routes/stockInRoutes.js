@@ -20,6 +20,7 @@ router.use(authMiddleware);
 router.get('/', stockInController.getAllStockIn);
 router.get('/unpaid', stockInController.getUnpaidBalances);
 router.get('/unpaid/total', stockInController.getTotalUnpaidBalance);
+router.get('/:id', stockInController.getStockInById);
 router.post('/', upload.single('receipt'), stockInValidation, stockInController.createStockIn);
 
 module.exports = router;
