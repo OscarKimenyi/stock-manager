@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Stock Management System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .signup-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+      }
+      .signup-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+      }
+      .signup-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .signup-header h2 {
+        color: var(--dark-color);
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .signup-header p {
+        color: #6c757d;
+      }
+      .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        position: relative;
+      }
+      .step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+      }
+      .step-circle {
+        width: 40px;
+        height: 40px;
+        background: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: 700;
+        color: #6c757d;
+        transition: all 0.3s ease;
+      }
+      .step.active .step-circle {
+        background: var(--primary-color);
+        color: white;
+      }
+      .step.completed .step-circle {
+        background: var(--success-color);
+        color: white;
+      }
+      .step-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+      .step.active .step-label {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+      .step-line {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 0;
+      }
+      .step-line.active {
+        background: var(--primary-color);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="signup-container">
+      <div class="signup-card">
+        <div class="signup-header">
+          <i
+            class="fas fa-boxes fa-3x"
+            style="color: #4361ee; margin-bottom: 20px"
+          ></i>
+          <h2>Create Your Account</h2>
+          <p>Start managing your stock professionally</p>
+        </div>
+
+        <!-- Step Indicator - Only 2 steps now -->
+        <div class="step-indicator">
+          <div class="step-line" id="stepLine"></div>
+          <div class="step active" id="step1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Company Info</div>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Admin Account</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Company Information -->
+        <form id="step1Form" class="signup-step">
+          <div class="mb-3">
+            <label for="company_name" class="form-label"
+              >Company Name <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="company_name"
+              required
+            />
+            <small class="text-muted"
+              >Your business name as it will appear in the system</small
+            >
+          </div>
+
+          <div class="mb-3">
+            <label for="business_type" class="form-label">Business Type</label>
+            <select class="form-select" id="business_type">
+              <option value="">Select Business Type</option>
+              <option value="Retail">Retail Store</option>
+              <option value="Wholesale">Wholesale Distributor</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="E-commerce">E-commerce</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="company_phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="company_phone" />
+          </div>
+
+          <div class="mb-3">
+            <label for="company_email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="company_email" />
+          </div>
+
+          <div class="mb-3">
+            <label for="company_address" class="form-label">Address</label>
+            <textarea
+              class="form-control"
+              id="company_address"
+              rows="2"
+            ></textarea>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary w-100"
+            onclick="nextStep()"
+          >
+            Continue <i class="fas fa-arrow-right ms-2"></i>
+          </button>
+        </form>
+
+        <!-- Step 2: Admin Account -->
+        <form id="step2Form" class="signup-step" style="display: none">
+          <div class="mb-3">
+            <label for="full_name" class="form-label"
+              >Full Name <span class="text-danger">*</span></label
+            >
+            <input type="text" class="form-control" id="full_name" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="username" class="form-label"
+              >Username <span class="text-danger">*</span></label
+            >
+            <input type="text" class="form-control" id="username" required />
+            <small class="text-muted"
+              >This will be displayed on your dashboard and used for
+              login</small
+            >
+            <div id="usernameFeedback" class="invalid-feedback"></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="admin_email" class="form-label"
+              >Email Address <span class="text-danger">*</span></label
+            >
+            <input
+              type="email"
+              class="form-control"
+              id="admin_email"
+              required
+            />
+            <small class="text-muted"
+              >Used for password recovery and notifications</small
+            >
+          </div>
+
+          <div class="mb-3">
+            <label for="admin_phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="admin_phone" />
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label"
+              >Password <span class="text-danger">*</span></label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              required
+            />
+            <small class="text-muted">Minimum 6 characters</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label"
+              >Confirm Password <span class="text-danger">*</span></label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="confirm_password"
+              required
+            />
+          </div>
+
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            By creating an account, you agree to our Terms of Service and
+            Privacy Policy.
+          </div>
+
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="prevStep()"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button
+              type="button"
+              class="btn btn-success flex-grow-1"
+              onclick="registerCompany()"
+            >
+              <i class="fas fa-check-circle me-2"></i> Create Account
+            </button>
+          </div>
+        </form>
+
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            Already have an account? <a href="login.html">Login here</a>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/signup.js"></script>
+  </body>
+</html>
