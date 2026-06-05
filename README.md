@@ -2,7 +2,7 @@
 
 A professional, production-ready Stock Management System built with Node.js, Express, MySQL, and Bootstrap 5. This system helps businesses efficiently manage their inventory, track stock movements, manage suppliers, and handle purchase payments.
 
-![Dashboard Preview](https://res.cloudinary.com/dhyo79gy1/image/upload/v1772892336/stock-dashboard_xzsmw2.png)
+![Dashboard Preview](https://res.cloudinary.com/dhyo79gy1/image/upload/v1780659758/stock-dashboard_evdeqj.png)
 
 ## 📋 Features
 
